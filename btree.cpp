@@ -12,7 +12,7 @@ using namespace std;
  * @tparam k min-size of keys/values in node
  */
 template <typename K , typename V, size_t k>
-requires std::totally_ordered<K>
+requires totally_ordered<K>
 class BTreeNode {
   typedef unique_ptr<BTreeNode> node_ptr;
   /**
@@ -33,7 +33,7 @@ public:
   /**
    * empty constructor setting leaf to true
    */
-  BTreeNode(const bool isLeaf = true) : leaf(isLeaf) {};
+  BTreeNode(const bool isLeaf = true) : leaf(isLeaf), entries(), children() {};
 
   /**
    *
@@ -57,7 +57,7 @@ public:
    * @return true if key is stored in node false otherwise
    */
   bool contains (const K& key) const {
-    return std::any_of(entries.begin(), entries.end(),
+    return any_of(entries.begin(), entries.end(),
         [&key](const pair<K, V>& entry) {
             return entry.first == key;
         });
@@ -69,14 +69,14 @@ public:
    * @return T value of key stored in node
    */
   V get (const K& key) const {
-    auto it = std::lower_bound(entries.begin(), entries.end(), key,
-            [](const std::pair<K, V>& entry, const K& key) {
+    auto it = lower_bound(entries.begin(), entries.end(), key,
+            [](const pair<K, V>& entry, const K& key) {
                 return entry.first < key;
             });
     if (it != entries.end() && it->first == key) {
       return it->second;
     }
-    throw std::out_of_range("Key not found");
+    throw out_of_range("Key not found");
   }
 
   /**
@@ -96,14 +96,16 @@ public:
     if (isFull()) {
       throw overflow_error("Node is full");
     }
-    auto it = std::lower_bound(entries.begin(), entries.end(), key,
+    auto it = lower_bound(entries.begin(), entries.end(), key,
         [](const pair<K, V>& entry, const K& key) {
             return entry.first < key;
         });
     entries.insert(it, make_pair(key, value));
   }
 
-  size_t findChildIndex()
+  size_t findChildIndex(typename vector<pair<K, V>>::iterator it) {
+    return distance(entries.begin(), it);
+  }
 
   friend class BTree;
 };
@@ -112,7 +114,7 @@ public:
 
 
 template <typename K , typename V, size_t k>
-requires std::totally_ordered<K>
+requires totally_ordered<K>
 class BTree {
   typedef unique_ptr<BTreeNode<K, V, k>> node_ptr;
   /**
@@ -121,13 +123,13 @@ class BTree {
   node_ptr root;
 
 public:
-  BTree() : root(std::make_unique<BTreeNode<K, V, k>>()) {}
+  BTree() : root(make_unique<BTreeNode<K, V, k>>()) {}
 
   bool contains(node_ptr node = root, const K& key) {
     if (node == nullptr) {
       return false;
     }
-    auto it = std::lower_bound(node->entries.begin(), node->entries.end(), key,
+    auto it = lower_bound(node->entries.begin(), node->entries.end(), key,
         [](const pair<K, V>& entry, const K& key) {
             return entry.first < key;
         });
@@ -139,7 +141,7 @@ public:
       return false;
     }
 
-    size_t childIndex = distance(node->entries.begin(), it);
+    size_t childIndex = node->findChildIndex(it);
     return contains(node->children[childIndex].get(), key);
   }
 };
