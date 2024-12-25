@@ -2,6 +2,7 @@
 #include <concepts>
 #include <iostream>
 #include <memory>
+#include "exceptions.cpp"
 
 using namespace std;
 
@@ -23,17 +24,42 @@ class BTreeNode {
    * array of pointers to each child node
    */
   vector<node_ptr> children;
-
-public:
   /**
    * boolean specifying if node is leaf or not
    */
   bool leaf;
 
+public:
+
   /**
    * empty constructor setting leaf to true
    */
   BTreeNode(const bool isLeaf = true) : leaf(isLeaf), entries(), children() {};
+
+  /**
+   *
+   * @return vector<pair<K, V>> pointer to the vector containing all entries for the node
+   */
+  const vector<pair<K, V>>& getEntries() const {
+    return entries;
+  }
+
+  /**
+   *
+   * @return true if node is leaf false otherwise
+   */
+  bool isLeaf() const {
+    return leaf;
+  }
+
+  /**
+   *
+   * @return vector<node_ptr>& pointer to the vector containing all pointers to
+   * child-nodes
+   */
+  const vector<node_ptr>& getChildren() const {
+    return children;
+  }
 
   /**
    *
@@ -47,36 +73,8 @@ public:
    *
    * @return 2 * k
    */
-  constexpr size_t maxSize() const {
+  static constexpr size_t maxSize() {
     return 2 * k;
-  }
-  
-  /**
-   *
-   * @param key key to look for in node
-   * @return true if key is stored in node false otherwise
-   */
-  bool contains (const K& key) const {
-    return any_of(entries.begin(), entries.end(),
-        [&key](const pair<K, V>& entry) {
-            return entry.first == key;
-        });
-  }
-
-  /**
-   *
-   * @param key key of value that should be returned in node
-   * @return T value of key stored in node
-   */
-  V get (const K& key) const {
-    auto it = lower_bound(entries.begin(), entries.end(), key,
-            [](const pair<K, V>& entry, const K& key) {
-                return entry.first < key;
-            });
-    if (it != entries.end() && it->first == key) {
-      return it->second;
-    }
-    throw out_of_range("Key not found");
   }
 
   /**
@@ -87,27 +85,9 @@ public:
     return size() == maxSize();
   }
 
-  /**
-   *
-   * @param key key of value to insert in node
-   * @param value value to insert in node
-   */
-  void add(const K& key, const V& value) {
-    if (isFull()) {
-      throw overflow_error("Node is full");
-    }
-    auto it = lower_bound(entries.begin(), entries.end(), key,
-        [](const pair<K, V>& entry, const K& key) {
-            return entry.first < key;
-        });
-    entries.insert(it, make_pair(key, value));
-  }
-
   size_t findChildIndex(typename vector<pair<K, V>>::iterator it) {
     return distance(entries.begin(), it);
   }
-
-  friend class BTree;
 };
 
 
@@ -125,7 +105,32 @@ class BTree {
 public:
   BTree() : root(make_unique<BTreeNode<K, V, k>>()) {}
 
-  bool contains(node_ptr node = root, const K& key) {
+  /**
+   *
+   * @param key
+   * @return
+   */
+  bool contains(const K& key) const {
+    return contains_helper(root.get(), key);
+  }
+
+  /**
+   * 
+   * @param key
+   * @return 
+   */
+  V get(const K& key) const {
+    return get_helper(root.get(), key);
+  }
+
+private:
+  /**
+   *
+   * @param node
+   * @param key
+   * @return
+   */
+  bool contains_helper(const BTreeNode<K, V, k>* node, const K& key) const {
     if (node == nullptr) {
       return false;
     }
@@ -136,13 +141,35 @@ public:
     if (it != node->entries.end() && it->first == key) {
       return true;
     }
-
     if (node->leaf) {
       return false;
     }
-
     size_t childIndex = node->findChildIndex(it);
-    return contains(node->children[childIndex].get(), key);
+    return contains_helper(node->children[childIndex].get(), key);
+  }
+
+  /**
+   *
+   * @param node
+   * @param key
+   * @return
+   */
+  V get_helper(const BTreeNode<K, V, k>* node, const K& key) const {
+    if (node == nullptr) {
+      throw key_not_in_tree(key + " is not in the tree");
+    }
+    auto it = lower_bound(node->entries.begin(), node->entries.end(), key,
+        [](const pair<K, V>& entry, const K& key) {
+            return entry.first < key;
+        });
+    if (it != node->entries.end() && it->first == key) {
+      return it->second;
+    }
+    if (node->leaf) {
+      throw key_not_in_tree(key + " is not in the tree");
+    }
+    size_t childIndex = node->findChildIndex(it);
+    return get_helper(node->children[childIndex].get(), key);
   }
 };
 
