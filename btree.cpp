@@ -5,6 +5,7 @@
 #include "exceptions.cpp"
 
 using namespace std;
+using namespace __gnu_cxx;
 
 /**
  *
@@ -85,11 +86,74 @@ public:
     return size() == maxSize();
   }
 
-  size_t findChildIndex(typename vector<pair<K, V>>::iterator it) {
+  /**
+   *
+   * @param key K key to compare to
+   * @return __gnu_cxx::__normal_iterator<const pair<K, V>*, vector<pair<K, V>>> iterator
+   * to first position where the given key is smaller than or equal to another key in entries in node
+   */
+  //__gnu_cxx::__normal_iterator<const pair<K, V>*, vector<pair<K, V>>>
+  __normal_iterator<const pair<K, V>*, vector<pair<K, V>>> findIndex(const K& key) const {
+    return lower_bound(entries.begin(), entries.end(), key,
+        [](const pair<K, V>& entry, const K& key) {
+            return entry.first < key;
+        });
+  }
+
+  /**
+   *
+   * @param key K key to insert into entries of node
+   * @param value V value to insert into entries of node
+   */
+  void insert(const K& key, const V& value) {
+    entries.emplace(findIndex(key), key, value);
+  }
+
+  void insert(const pair<K, V>& entry ) {
+    insert(entry.first, entry.second);
+  }
+
+  /**
+   *
+   * @param child unique_ptr<BTreeNode> ptr to child node to insert into
+   * children
+   */
+  void addChild(node_ptr child) {
+    children.push_back(child);
+  }
+
+  /**
+   *
+   * @param it __gnu_cxx::__normal_iterator<const pair<K, V>*, vector<pair<K, V>>> iterator to first position where key is lower bound
+   * @return size_t index of child node where key should be inserted
+   */
+  size_t findChildIndex(__normal_iterator<const pair<K, V>*, vector<pair<K, V>>> it) {
     return distance(entries.begin(), it);
+  }
+
+  pair<K, V> pop_at(size_t index) {
+    if (index >= entries.size()) {
+      throw out_of_range("Index out of range");
+    }
+    pair<K, V> entry = entries[index];
+    entries.erase(entries.begin() + index);
+    return entry;
+  }
+
+  /**
+   * 
+   * @param i size_t index of child to split
+   */
+  void  splitChild(size_t i) {
+    //assert(child.entries.size == 2k+1);
+    node_ptr child = children[i];
+    insert(child->pop_at(k));
   }
 };
 
+
+
+//--------------------------------------------
 
 
 
@@ -115,12 +179,24 @@ public:
   }
 
   /**
-   * 
+   *
    * @param key
-   * @return 
+   * @return
    */
   V get(const K& key) const {
     return get_helper(root.get(), key);
+  }
+
+  /**
+   *
+   * @param key
+   * @param value
+   */
+  void insert(const K& key, const V& value) {
+    if (contains(key)) {
+      throw key_already_exists(to_string(key) + " already exists in tree");
+    }
+    insert_helper(root.get(), key, value);
   }
 
 private:
@@ -131,13 +207,7 @@ private:
    * @return
    */
   bool contains_helper(const BTreeNode<K, V, k>* node, const K& key) const {
-    if (node == nullptr) {
-      return false;
-    }
-    auto it = lower_bound(node->entries.begin(), node->entries.end(), key,
-        [](const pair<K, V>& entry, const K& key) {
-            return entry.first < key;
-        });
+    auto it = node->findIndex(key);
     if (it != node->entries.end() && it->first == key) {
       return true;
     }
@@ -145,7 +215,7 @@ private:
       return false;
     }
     size_t childIndex = node->findChildIndex(it);
-    return contains_helper(node->children[childIndex].get(), key);
+    return contains_helper(node->getChildren()[childIndex].get(), key);
   }
 
   /**
@@ -155,22 +225,41 @@ private:
    * @return
    */
   V get_helper(const BTreeNode<K, V, k>* node, const K& key) const {
-    if (node == nullptr) {
-      throw key_not_in_tree(key + " is not in the tree");
-    }
-    auto it = lower_bound(node->entries.begin(), node->entries.end(), key,
-        [](const pair<K, V>& entry, const K& key) {
-            return entry.first < key;
-        });
+    auto it = node->findIndex(key);
     if (it != node->entries.end() && it->first == key) {
       return it->second;
     }
     if (node->leaf) {
-      throw key_not_in_tree(key + " is not in the tree");
+      throw key_not_in_tree(to_string(key) + " is not in tree");
     }
     size_t childIndex = node->findChildIndex(it);
-    return get_helper(node->children[childIndex].get(), key);
+    return get_helper(node->getChildren()[childIndex].get(), key);
   }
+
+  /**
+   *
+   * @param node
+   * @param key
+   * @param value
+   */
+  void insert_helper(const BTreeNode<K, V, k>* node, const K& key, const V& value) {
+    if (node->isLeaf()) {
+      if (!node->isFull()) {
+        node.insert(key, value);
+      } else {
+        //split node
+        node.insert(key, value);
+        if (node == root) {
+
+        } else {
+
+        }
+      }
+    } else {
+      insert_helper(node->getChildren()[node->findChildIndex(node->findIndex(key))].get(), key, value);
+    }
+  }
+
 };
 
 int main() {
