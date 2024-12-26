@@ -109,6 +109,10 @@ public:
     entries.emplace(findIndex(key), key, value);
   }
 
+  /**
+   * 
+   * @param entry 
+   */
   void insert(const pair<K, V>& entry ) {
     insert(entry.first, entry.second);
   }
@@ -138,7 +142,7 @@ public:
    */
   pair<K, V> pop_at(size_t index) {
     if (index >= entries.size()) {
-      throw out_of_range("Index out of range");
+      throw out_of_range("Index out of range in pop_at()");
     }
     pair<K, V> entry = entries[index];
     entries.erase(entries.begin() + index);
@@ -146,15 +150,15 @@ public:
   }
 
   /**
-   * 
+   *
    * @param from
-   * @param to 
-   * @param index 
+   * @param to
+   * @param index
    */
   template <typename T>
   void move_entries(vector<T>* from, vector<T>* to, size_t index) {
     if (index >= from->size()) {
-      throw std::out_of_range("Start index out of range");
+      throw out_of_range("Start index out of range in move_entries()");
     }
     to->insert(to->end(),
                std::make_move_iterator(from->begin() + index),
@@ -176,7 +180,7 @@ public:
 
     node_ptr newNode = make_unique<BTreeNode>(child->isLeaf());
 
-    move_entries(&child->entries, &newNode->entries, k + 0);
+    move_entries(&child->entries, &newNode->entries, k);
     if (!child->isLeaf()) {
       move_entries(&child->children, &newNode->children, k + 1);
     }
