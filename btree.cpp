@@ -35,7 +35,7 @@ public:
   /**
    * empty constructor setting leaf to true
    */
-  BTreeNode(const bool isLeaf = true) : leaf(isLeaf), entries(), children() {};
+  BTreeNode(const bool isLeaf = true) : entries(), children(), leaf(isLeaf) {};
 
   /**
    *
@@ -53,6 +53,10 @@ public:
     return leaf;
   }
 
+  /**
+   *
+   * @param isLeaf bool to set leaf to
+   */
   void setLeaf(const bool isLeaf) {
     leaf = isLeaf;
   }
@@ -91,6 +95,14 @@ public:
   }
 
   /**
+   * 
+   * @return true if node is overflowing
+   */
+  bool isOverflowing() const {
+    return size() > maxSize();
+  }
+
+  /**
    *
    * @param key K key to compare to
    * @return __gnu_cxx::__normal_iterator<const pair<K, V>*, vector<pair<K, V>>> iterator
@@ -115,7 +127,7 @@ public:
 
   /**
    *
-   * @param entry
+   * @param entry pair of key and value to insert into btree as const reference
    */
   void insert(const pair<K, V>& entry ) {
     insert(entry.first, entry.second);
@@ -127,7 +139,7 @@ public:
    * children
    */
   void addChild(node_ptr child) {
-    children.push_back(child);
+    children.push_back(move(child));
   }
 
   /**
@@ -135,14 +147,14 @@ public:
    * @param it __gnu_cxx::__normal_iterator<const pair<K, V>*, vector<pair<K, V>>> iterator to first position where key is lower bound
    * @return size_t index of child node where key should be inserted
    */
-  size_t findChildIndex(__normal_iterator<const pair<K, V>*, vector<pair<K, V>>> it) {
+  size_t findChildIndex(const __normal_iterator<const pair<K, V>*, vector<pair<K, V>>> it) const {
     return distance(entries.begin(), it);
   }
 
   /**
    *
-   * @param index
-   * @return
+   * @param index size_t index of element to pop from entries
+   * @return pair of key and value of element at given index
    */
   pair<K, V> pop_at(size_t index) {
     if (index >= entries.size()) {
@@ -155,9 +167,9 @@ public:
 
   /**
    *
-   * @param from
-   * @param to
-   * @param index
+   * @param from vector from which to move entries
+   * @param to vector into which entries should be moved
+   * @param index starting index in from
    */
   template <typename T>
   void move_entries(vector<T>* from, vector<T>* to, size_t index) {
@@ -175,7 +187,7 @@ public:
    * @param i size_t index of child to split
    */
   void  splitChild(size_t i) {
-    node_ptr child = children[i];
+    node_ptr child = move(children[i]);
     if (!child->isFull()) {
       throw logic_error("Cannot split a non-full child node");
     }
@@ -203,6 +215,7 @@ template <typename K , typename V, size_t k>
 requires totally_ordered<K>
 class BTree {
   typedef unique_ptr<BTreeNode<K, V, k>> node_ptr;
+
   /**
    * root of BTree
    */
@@ -213,8 +226,8 @@ public:
 
   /**
    *
-   * @param key
-   * @return
+   * @param key const K& reference of key to lookup in tree
+   * @return true if key exists, false otherwise
    */
   bool contains(const K& key) const {
     return contains_helper(root.get(), key);
@@ -222,8 +235,8 @@ public:
 
   /**
    *
-   * @param key
-   * @return
+   * @param key const K& reference of key of value to get
+   * @return V value for given key in tree
    */
   V get(const K& key) const {
     return get_helper(root.get(), key);
@@ -231,8 +244,9 @@ public:
 
   /**
    *
-   * @param key
-   * @param value
+   * @param key const K& reference of key to insert into tree
+   * @param value const V& reference of value to insert into tree with given key
+   * @throws key_already_exists if given key already exists in node
    */
   void insert(const K& key, const V& value) {
     if (contains(key)) {
@@ -245,6 +259,13 @@ public:
     }
   }
 
+  /**
+   *
+   */
+  void printTree() const {
+    printInOrder(root.get());
+  }
+
 private:
   /**
    *
@@ -254,10 +275,10 @@ private:
    */
   bool contains_helper(const BTreeNode<K, V, k>* node, const K& key) const {
     auto it = node->findIndex(key);
-    if (it != node->entries.end() && it->first == key) {
+    if (it != node->getEntries().end() && it->first == key) {
       return true;
     }
-    if (node->leaf) {
+    if (node->isLeaf()) {
       return false;
     }
     size_t childIndex = node->findChildIndex(it);
@@ -272,10 +293,10 @@ private:
    */
   V get_helper(const BTreeNode<K, V, k>* node, const K& key) const {
     auto it = node->findIndex(key);
-    if (it != node->entries.end() && it->first == key) {
+    if (it != node->getEntries().end() && it->first == key) {
       return it->second;
     }
-    if (node->leaf) {
+    if (node->isLeaf()) {
       throw key_not_in_tree(to_string(key) + " is not in tree");
     }
     size_t childIndex = node->findChildIndex(it);
@@ -283,17 +304,19 @@ private:
   }
 
   /**
-   * 
+   *
    * @param key
-   * @param value 
+   * @param value
    */
   void insert_root(const K& key, const V& value) {
     //assert(root->isLeaf);
     root->insert(key, value);
-    node_ptr newNode = make_unique<BTreeNode<K, V, k>>(false);
-    newNode->addChild(root);
-    root = newNode;
-    root->splitChild(0);
+    if (root->isOverflowing()) {
+      node_ptr newNode = make_unique<BTreeNode<K, V, k>>(false);
+      newNode->addChild(move(root));
+      root = move(newNode);
+      root->splitChild(0);
+    }
   }
 
   /**
@@ -302,26 +325,49 @@ private:
    * @param key
    * @param value
    */
-  void insert_helper(const BTreeNode<K, V, k>* node, const K& key, const V& value) {
+  void insert_helper(BTreeNode<K, V, k>* node, const K& key, const V& value) {
     if (node->isLeaf()) {
-      if (!node->isFull()) {
-        node.insert(key, value);
-      } else {
-        //split node
-        node.insert(key, value);
-        if (node == root) {
-
-        } else {
-
-        }
-      }
+      node->insert(key, value);
     } else {
-      insert_helper(node->getChildren()[node->findChildIndex(node->findIndex(key))].get(), key, value);
+      size_t childIndex = node->findChildIndex(node->findIndex(key));
+      BTreeNode<K, V, k>* child = node->getChildren()[childIndex].get();
+      insert_helper(child, key, value);
+      if (child->isOverflowing()) {
+        node->splitChild(childIndex);
+      }
     }
   }
 
+  /**
+   *
+   * @param node
+   */
+  void printInOrder(const BTreeNode<K, V, k>* node) const {
+    if (!node) return;
+    for (size_t i = 0; i < node->size(); ++i) {
+      if (!node->isLeaf()) {
+        printInOrder(node->getChildren()[i].get());
+      }
+      cout << node->getEntries()[i].first << ": " << node->getEntries()[i].second << endl;
+    }
+    if (!node->isLeaf()) {
+      printInOrder(node->getChildren().back().get());
+    }
+  }
 };
 
 int main() {
+  constexpr size_t k = 2;
+  BTree<int, string, k> tree;
+
+  tree.insert(10, "ten");
+  tree.insert(20, "twenty");
+  tree.insert(5, "five");
+  tree.insert(6, "six");
+
+  cout << "Tree contains 10: " << tree.contains(10) << endl;
+  cout << "Value for key 20: " << tree.get(20) << endl;
+
+  tree.printTree();
   return 0;
 };
