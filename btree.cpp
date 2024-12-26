@@ -53,6 +53,10 @@ public:
     return leaf;
   }
 
+  void setLeaf(const bool isLeaf) {
+    leaf = isLeaf;
+  }
+
   /**
    *
    * @return vector<node_ptr>& pointer to the vector containing all pointers to
@@ -110,8 +114,8 @@ public:
   }
 
   /**
-   * 
-   * @param entry 
+   *
+   * @param entry
    */
   void insert(const pair<K, V>& entry ) {
     insert(entry.first, entry.second);
@@ -234,7 +238,11 @@ public:
     if (contains(key)) {
       throw key_already_exists(to_string(key) + " already exists in tree");
     }
-    insert_helper(root.get(), key, value);
+    if (root->isLeaf()) {
+      insert_root(key, value);
+    } else {
+      insert_helper(root.get(), key, value);
+    }
   }
 
 private:
@@ -272,6 +280,20 @@ private:
     }
     size_t childIndex = node->findChildIndex(it);
     return get_helper(node->getChildren()[childIndex].get(), key);
+  }
+
+  /**
+   * 
+   * @param key
+   * @param value 
+   */
+  void insert_root(const K& key, const V& value) {
+    //assert(root->isLeaf);
+    root->insert(key, value);
+    node_ptr newNode = make_unique<BTreeNode<K, V, k>>(false);
+    newNode->addChild(root);
+    root = newNode;
+    root->splitChild(0);
   }
 
   /**
