@@ -188,7 +188,7 @@ public:
    */
   void  splitChild(size_t i) {
     node_ptr child = move(children[i]);
-    if (!child->isFull()) {
+    if (!child->isOverflowing()) {
       throw logic_error("Cannot split a non-full child node");
     }
 
@@ -269,9 +269,9 @@ public:
 private:
   /**
    *
-   * @param node
-   * @param key
-   * @return
+   * @param node BTreeNode<K, V, k>* pointer to current node
+   * @param const K& reference of key to lookup
+   * @return true if node contains key
    */
   bool contains_helper(const BTreeNode<K, V, k>* node, const K& key) const {
     auto it = node->findIndex(key);
@@ -287,9 +287,10 @@ private:
 
   /**
    *
-   * @param node
-   * @param key
-   * @return
+   * @param node BTreeNode<K, V, k>* pointer to current node
+   * @param key const K& reference of key for value to get
+   * @return V value for given tree
+   * @throws key_not_in_tree if given key is not in tree
    */
   V get_helper(const BTreeNode<K, V, k>* node, const K& key) const {
     auto it = node->findIndex(key);
@@ -305,8 +306,8 @@ private:
 
   /**
    *
-   * @param key
-   * @param value
+   * @param key const K& reference of key to insert
+   * @param value const V& reference of value to insert with given key
    */
   void insert_root(const K& key, const V& value) {
     //assert(root->isLeaf);
@@ -321,9 +322,9 @@ private:
 
   /**
    *
-   * @param node
-   * @param key
-   * @param value
+   * @param node BTreeNode<K, V, k>* pointer to current node
+   * @param key const K& reference of key to insert
+   * @param value const V& reference of value to insert with given key
    */
   void insert_helper(BTreeNode<K, V, k>* node, const K& key, const V& value) {
     if (node->isLeaf()) {
@@ -340,7 +341,7 @@ private:
 
   /**
    *
-   * @param node
+   * @param node BTreeNode<K, V, k>* pointer to current node
    */
   void printInOrder(const BTreeNode<K, V, k>* node) const {
     if (!node) return;
@@ -364,10 +365,9 @@ int main() {
   tree.insert(20, "twenty");
   tree.insert(5, "five");
   tree.insert(6, "six");
-
-  cout << "Tree contains 10: " << tree.contains(10) << endl;
-  cout << "Value for key 20: " << tree.get(20) << endl;
+  tree.insert(8, "eight");
 
   tree.printTree();
+
   return 0;
 };
