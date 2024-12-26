@@ -131,6 +131,11 @@ public:
     return distance(entries.begin(), it);
   }
 
+  /**
+   *
+   * @param index
+   * @return
+   */
   pair<K, V> pop_at(size_t index) {
     if (index >= entries.size()) {
       throw out_of_range("Index out of range");
@@ -142,12 +147,41 @@ public:
 
   /**
    * 
+   * @param from
+   * @param to 
+   * @param index 
+   */
+  template <typename T>
+  void move_entries(vector<T>* from, vector<T>* to, size_t index) {
+    if (index >= from->size()) {
+      throw std::out_of_range("Start index out of range");
+    }
+    to->insert(to->end(),
+               std::make_move_iterator(from->begin() + index),
+               std::make_move_iterator(from->end()));
+    from->erase(from->begin() + index, from->end());
+  }
+
+    /**
+   *
    * @param i size_t index of child to split
    */
   void  splitChild(size_t i) {
-    //assert(child.entries.size == 2k+1);
     node_ptr child = children[i];
+    if (!child->isFull()) {
+      throw logic_error("Cannot split a non-full child node");
+    }
+
     insert(child->pop_at(k));
+
+    node_ptr newNode = make_unique<BTreeNode>(child->isLeaf());
+
+    move_entries(&child->entries, &newNode->entries, k + 0);
+    if (!child->isLeaf()) {
+      move_entries(&child->children, &newNode->children, k + 1);
+    }
+
+    children.insert(children.begin() + i + 1, move(newNode));
   }
 };
 
