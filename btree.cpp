@@ -95,7 +95,7 @@ public:
   }
 
   /**
-   * 
+   *
    * @return true if node is overflowing
    */
   bool isOverflowing() const {
@@ -179,7 +179,7 @@ public:
     to->insert(to->end(),
                std::make_move_iterator(from->begin() + index),
                std::make_move_iterator(from->end()));
-    from->erase(from->begin() + index, from->end());
+    from->resize(index);
   }
 
     /**
@@ -203,6 +203,16 @@ public:
 
     children.insert(children.begin() + i + 1, move(newNode));
   }
+
+  /**
+   * print node
+   */
+  void print() const {
+    for (size_t i = 0; i < entries.size(); i++) {
+      cout << "{" << entries[i].first << ", " << entries[i].second << "} ";
+    }
+    cout << endl;
+  }
 };
 
 
@@ -210,7 +220,12 @@ public:
 //--------------------------------------------
 
 
-
+/**
+ *
+ * @tparam K generic type of keys held in node
+ * @tparam V generic type of values held in node
+ * @tparam k min-size of keys/values in node
+ */
 template <typename K , typename V, size_t k>
 requires totally_ordered<K>
 class BTree {
@@ -344,12 +359,13 @@ private:
    * @param node BTreeNode<K, V, k>* pointer to current node
    */
   void printInOrder(const BTreeNode<K, V, k>* node) const {
-    if (!node) return;
-    for (size_t i = 0; i < node->size(); ++i) {
+    for (size_t i = 0; i < node->size(); i++) {
       if (!node->isLeaf()) {
         printInOrder(node->getChildren()[i].get());
+        cout << node->getEntries()[i].first << ": " << node->getEntries()[i].second << endl;
+      } else {
+        node->print();
       }
-      cout << node->getEntries()[i].first << ": " << node->getEntries()[i].second << endl;
     }
     if (!node->isLeaf()) {
       printInOrder(node->getChildren().back().get());
