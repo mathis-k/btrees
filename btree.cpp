@@ -122,7 +122,16 @@ public:
    * @param value V value to insert into entries of node
    */
   void insert(const K& key, const V& value) {
-    entries.emplace(findIndex(key), key, value);
+    auto it = lower_bound(entries.begin(), entries.end(), key,
+        [](const pair<K, V>& entry, const K& key) {
+            return entry.first < key;
+        });
+
+    if (it != entries.end() && it->first == key) {
+      it->second = value;
+    } else {
+      entries.emplace(it, key, value);
+    }
   }
 
   /**
@@ -163,6 +172,17 @@ public:
     pair<K, V> entry = entries[index];
     entries.erase(entries.begin() + index);
     return entry;
+  }
+
+  /**
+   * 
+   * @param key
+   * @return 
+   */
+  bool contains(const K& key) {
+    auto it = findIndex(key);
+
+    return (it != entries.end() && it->first == key);
   }
 
   /**
@@ -262,12 +282,8 @@ public:
    *
    * @param key const K& reference of key to insert into tree
    * @param value const V& reference of value to insert into tree with given key
-   * @throws key_already_exists if given key already exists in node
    */
   void insert(const K& key, const V& value) {
-    if (contains(key)) {
-      throw key_already_exists(to_string(key) + " already exists in tree");
-    }
     if (root->isLeaf()) {
       insert_root(key, value);
     } else {
@@ -343,6 +359,9 @@ private:
    * @param value const V& reference of value to insert with given key
    */
   void insert_helper(BTreeNode<K, V, k>* node, const K& key, const V& value) {
+    if (node->contains(key)) {
+      node->insert(key, value);
+    }
     if (node->isLeaf()) {
       node->insert(key, value);
     } else {
