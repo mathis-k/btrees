@@ -284,8 +284,9 @@ public:
   /**
    * prints tree inOrder
    */
-  void printTree() const {
+  void print() const {
     printInOrder(root.get());
+    cout << endl;
   }
 
 private:
@@ -395,11 +396,11 @@ int main() {
   }
 
   cout << "In-Order-Ausgabe des B-Baums:" << endl;
-  tree.printTree();
+  tree.print();
 
   tree.insert(1, "updated one");
 
-  tree.printTree();
+  tree.print();
 
   return 0;
 };
