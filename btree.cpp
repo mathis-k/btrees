@@ -363,10 +363,8 @@ private:
     for (size_t i = 0; i < node->size(); i++) {
       if (!node->isLeaf()) {
         printInOrder(node->getChildren()[i].get());
-        cout << node->getEntries()[i].first << ": " << node->getEntries()[i].second << endl;
-      } else {
-        node->print();
       }
+      cout << node->getEntries()[i].first << ": " << node->getEntries()[i].second << endl;
     }
     if (!node->isLeaf()) {
       printInOrder(node->getChildren().back().get());
