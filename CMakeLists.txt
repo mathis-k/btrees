@@ -29,6 +29,7 @@ file(GLOB_RECURSE SRCS "*.cpp")
 add_executable(btrees
         btree.cpp
         exceptions.cpp
+        main.cpp
 )
 
 # Set the output directory for the executable
