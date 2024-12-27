@@ -17,7 +17,14 @@ A **B-Tree** is a generalization of a binary search tree where each node can hav
 In this implementation, the tree nodes store key-value pairs and are able to handle overflow by splitting nodes when they exceed their maximum capacity.
 
 ## Structure
-
+```
+btrees/
+├── CMakeLists.txt   # CMake configuration file
+├── README.md       # Project documentation (this file)
+├── exceptions.cpp  # Exception definitions
+├── btree.cpp           # B-tree implementation
+└── main.cpp            # Main program to run the B-tree
+```
 ### BTreeNode
 
 The `BTreeNode` class represents a single node of the B-tree. Each node can have:
@@ -69,7 +76,7 @@ Searching for a key is a recursive process:
 
 ## Features
 - **Balanced Tree**: The B-tree maintains its balance, ensuring that all operations have logarithmic time complexity.
-- **Efficient Insertion and Deletion**: The tree handles node splits automatically when nodes become full.
+- **Efficient Insertion**: The tree handles node splits automatically when nodes become full.
 - **Key-Value Storage**: The tree stores key-value pairs, supporting both retrieval and updates.
 
 ## Installation
