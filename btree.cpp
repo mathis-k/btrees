@@ -179,7 +179,7 @@ public:
     to->insert(to->end(),
                std::make_move_iterator(from->begin() + index),
                std::make_move_iterator(from->end()));
-    from->resize(index);
+    from->erase(from->begin() + index, from->end());
   }
 
     /**
