@@ -188,6 +188,7 @@ public:
    */
   void  splitChild(size_t i) {
     node_ptr child = move(children[i]);
+    children.erase(children.begin() + i);
     if (!child->isOverflowing()) {
       throw logic_error("Cannot split a non-full child node");
     }
@@ -200,7 +201,7 @@ public:
     if (!child->isLeaf()) {
       move_entries(&child->children, &newNode->children, k + 1);
     }
-
+    children.insert(children.begin() + i, move(child));
     children.insert(children.begin() + i + 1, move(newNode));
   }
 
