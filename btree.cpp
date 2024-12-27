@@ -224,16 +224,6 @@ public:
     children.insert(children.begin() + i, move(child));
     children.insert(children.begin() + i + 1, move(newNode));
   }
-
-  /**
-   * print node
-   */
-  void print() const {
-    for (size_t i = 0; i < entries.size(); i++) {
-      cout << "{" << entries[i].first << ", " << entries[i].second << "} ";
-    }
-    cout << endl;
-  }
 };
 
 
@@ -292,7 +282,7 @@ public:
   }
 
   /**
-   *
+   * prints tree inOrder
    */
   void printTree() const {
     printInOrder(root.get());
@@ -359,9 +349,6 @@ private:
    * @param value const V& reference of value to insert with given key
    */
   void insert_helper(BTreeNode<K, V, k>* node, const K& key, const V& value) {
-    if (node->contains(key)) {
-      node->insert(key, value);
-    }
     if (node->isLeaf()) {
       node->insert(key, value);
     } else {
