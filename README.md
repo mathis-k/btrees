@@ -131,32 +131,137 @@ You can print the B-tree in an in-order fashion:
 tree.print();
 ```
 
-## Example
+## Examples
 
-Here’s an example of how to use the B-tree:
+### 1. **Inserting Entries into the BTree**
+
 ```cpp
+#include <iostream>
+#include "btree.cpp"
+
+int main() {
+    constexpr size_t k = 2;
+    BTree<int, std::string, k> tree;
+
+    // Insert values into the B-tree
+    tree.insert(10, "ten");
+    tree.insert(20, "twenty");
+    tree.insert(30, "thirty");
+
+    // Print the tree in-order
+    tree.print();
+
+    return 0;
+};
+```
+
+### 2. **Updating Entries**
+
+```cpp
+#include <iostream>
+#include "btree.cpp"
+
+int main() {
+    constexpr size_t k = 2;
+    BTree<int, std::string, k> tree;
+
+    // Insert values into the B-tree
+    tree.insert(10, "ten");
+    tree.insert(20, "twenty");
+    tree.insert(30, "thirty");
+
+    // Update the value for key 20
+    tree.insert(20, "updated twenty");
+
+    // Print the tree in-order
+    tree.print();
+
+    return 0;
+};
+```
+
+### 3. **Searching for Entries**
+
+```cpp
+#include <iostream>
+#include "btree.cpp"
+
+int main() {
+    constexpr size_t k = 2;
+    BTree<int, std::string, k> tree;
+
+    // Insert values into the B-tree
+    tree.insert(10, "ten");
+    tree.insert(20, "twenty");
+    tree.insert(30, "thirty");
+
+    // Search for a key
+    int key = 20;
+    if (tree.contains(key)) {
+        std::cout << "Found key " << key << " with value: " << tree.get(key) << std::endl;
+    } else {
+        std::cout << "Key " << key << " not found!" << std::endl;
+    }
+
+    return 0;
+};
+```
+
+### 4. **Handling Non-Existent Keys**
+
+```cpp
+#include <iostream>
+#include "btree.cpp"
+
+int main() {
+    constexpr size_t k = 2;
+    BTree<int, std::string, k> tree;
+
+    // Insert values into the B-tree
+    tree.insert(10, "ten");
+    tree.insert(20, "twenty");
+    tree.insert(30, "thirty");
+
+    // Try to search for a non-existant key
+    try {
+        int key = 40;
+        std::cout << "Value for key " << key << ": " << tree.get(key) << std::endl;
+    } catch (const std::exception& e) {
+        std::cout << "Error: " << e.what() << std::endl;  // Erwartete Ausnahme
+    }
+
+    return 0;
+};
+```
+
+### 5. **Big Example**
+
+```cpp
+#include <iostream>
+#include "btree.cpp"
+
 int main() {
   constexpr size_t k = 2;
   BTree<int, string, k> tree;
 
   vector<pair<int, string>> values = {
-    {50, "fifty"}, {20, "twenty"}, {70, "seventy"},
-    {10, "ten"}, {30, "thirty"}, {60, "sixty"}
+    {50, "fifty"}, {20, "twenty"}, {70, "seventy"}, {10, "ten"},
+    {30, "thirty"}, {60, "sixty"}, {80, "eighty"}, {5, "five"},
+    {15, "fifteen"}, {25, "twenty-five"}, {35, "thirty-five"}, {55, "fifty-five"},
+    {65, "sixty-five"}, {75, "seventy-five"}, {85, "eighty-five"}, {1, "one"},
+    {7, "seven"}, {12, "twelve"}, {18, "eighteen"}, {28, "twenty-eight"}
   };
 
-  // Insert values into the B-tree
   for (const auto& [key, value] : values) {
     tree.insert(key, value);
   }
 
-  // Print the tree in-order
-  cout << "In-Order Traversal of B-tree:" << endl;
   tree.print();
 
-  // Insert a new value and print again
-  tree.insert(40, "forty");
+  tree.insert(1, "updated one");
+
   tree.print();
 
   return 0;
-}
+};
 ```
