@@ -19,11 +19,11 @@ In this implementation, the tree nodes store key-value pairs and are able to han
 ## Structure
 ```
 btrees/
-├── CMakeLists.txt   # CMake configuration file
-├── README.md  # Project documentation (this file)
-├── exceptions.cpp   # Exception definitions
-├── btree.cpp  # B-tree implementation
-└── main.cpp   # Main program to run the B-tree
+├── CMakeLists.txt
+├── README.md
+├── exceptions.cpp
+├── btree.cpp
+└── main.cpp
 ```
 ### BTreeNode
 
