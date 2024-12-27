@@ -35,7 +35,7 @@ public:
   /**
    * empty constructor setting leaf to true
    */
-  BTreeNode(const bool isLeaf = true) : entries(), children(), leaf(isLeaf) {};
+  explicit BTreeNode(const bool isLeaf = true) : entries(), children(), leaf(isLeaf) {};
 
   /**
    *
@@ -49,7 +49,7 @@ public:
    *
    * @return true if node is leaf false otherwise
    */
-  bool isLeaf() const {
+  [[nodiscard]] bool isLeaf() const {
     return leaf;
   }
 
@@ -74,7 +74,7 @@ public:
    *
    * @return size_t size of node
    */
-  size_t size() const {
+  [[nodiscard]] size_t size() const {
     return entries.size();
   }
 
@@ -90,7 +90,7 @@ public:
    *
    * @return bool true if node is full (size == 2k)
    */
-  bool isFull() const {
+  [[nodiscard]] bool isFull() const {
     return size() == maxSize();
   }
 
@@ -98,7 +98,7 @@ public:
    *
    * @return true if node is overflowing
    */
-  bool isOverflowing() const {
+  [[nodiscard]] bool isOverflowing() const {
     return size() > maxSize();
   }
 
@@ -293,7 +293,7 @@ private:
   /**
    *
    * @param node BTreeNode<K, V, k>* pointer to current node
-   * @param const K& reference of key to lookup
+   * @param key const K& reference of key to lookup
    * @return true if node contains key
    */
   bool contains_helper(const BTreeNode<K, V, k>* node, const K& key) const {
