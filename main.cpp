@@ -49,8 +49,8 @@ int main() {
   }
 
   // Searching for a non-existent key (key 1000)
-  int nonExistentKey = 1000;
   try {
+    constexpr int nonExistentKey = 1000;
     std::cout << "\nValue for non-existent key " << nonExistentKey << ": " << tree.get(nonExistentKey) << std::endl;
   } catch (const std::exception& e) {
     std::cout << "Error: " << e.what() << std::endl;
