@@ -410,5 +410,9 @@ int main() {
   cout << "In-Order-Ausgabe des B-Baums:" << endl;
   tree.printTree();
 
+  tree.insert(1, "updated one");
+
+  tree.printTree();
+
   return 0;
 };
