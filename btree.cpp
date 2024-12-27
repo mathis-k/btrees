@@ -380,27 +380,5 @@ private:
 };
 
 int main() {
-  constexpr size_t k = 2;
-  BTree<int, string, k> tree;
-
-  vector<pair<int, string>> values = {
-    {50, "fifty"}, {20, "twenty"}, {70, "seventy"}, {10, "ten"},
-    {30, "thirty"}, {60, "sixty"}, {80, "eighty"}, {5, "five"},
-    {15, "fifteen"}, {25, "twenty-five"}, {35, "thirty-five"}, {55, "fifty-five"},
-    {65, "sixty-five"}, {75, "seventy-five"}, {85, "eighty-five"}, {1, "one"},
-    {7, "seven"}, {12, "twelve"}, {18, "eighteen"}, {28, "twenty-eight"}
-  };
-
-  for (const auto& [key, value] : values) {
-    tree.insert(key, value);
-  }
-
-  cout << "In-Order-Ausgabe des B-Baums:" << endl;
-  tree.print();
-
-  tree.insert(1, "updated one");
-
-  tree.print();
-
   return 0;
 };
